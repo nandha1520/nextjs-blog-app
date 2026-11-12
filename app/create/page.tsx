@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePosts } from "@/context/postcontext";
-import Button from "@/components/button";
+
 
 export default function CreatePost() {
   const router = useRouter();

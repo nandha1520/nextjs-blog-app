@@ -4,9 +4,9 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
@@ -22,70 +22,82 @@ type PostContextType = {
   postsReady: boolean;
 };
 
+const STORAGE_KEY = "blog-posts";
+
 const PostContext = createContext<PostContextType | undefined>(
   undefined
 );
+
+// Read and validate saved posts
+function readSavedPosts(): Post[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) return [];
+
+    const parsed: unknown = JSON.parse(saved);
+
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(
+        (post) =>
+          post !== null &&
+          typeof post === "object" &&
+          typeof post.id === "number" &&
+          Number.isSafeInteger(post.id) &&
+          post.id < 0 &&
+          typeof post.title === "string" &&
+          typeof post.body === "string"
+      )
+    ) {
+      return parsed as Post[];
+    }
+  } catch (error) {
+    console.error("Failed to load saved posts:", error);
+  }
+
+  return [];
+}
+
+// Subscribe to changes in browser storage
+function subscribeToStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+
+  return () => {
+    window.removeEventListener("storage", callback);
+  };
+}
+
+function getClientSnapshot() {
+  return true;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 export function PostProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [newPosts, setNewPosts] = useState<Post[]>([]);
-  const [postsReady, setPostsReady] = useState(false);
+  // Becomes true after client hydration
+  const postsReady = useSyncExternalStore(
+    subscribeToStorage,
+    getClientSnapshot,
+    getServerSnapshot
+  );
 
-  const nextId = useRef(-1);
+  // Load posts only when client is ready
+  const [newPosts, setNewPosts] = useState<Post[]>(() => {
+    if (typeof window === "undefined") return [];
 
-  // Load saved posts when the app starts
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("blog-posts");
+    return readSavedPosts();
+  });
 
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
-
-        if (
-          Array.isArray(parsed) &&
-          parsed.every(
-            (post) =>
-              typeof post.id === "number" &&
-              Number.isSafeInteger(post.id) &&
-              post.id < 0 &&
-              typeof post.title === "string" &&
-              typeof post.body === "string"
-          )
-        ) {
-          const savedPosts = parsed as Post[];
-          setNewPosts(savedPosts);
-
-          const lowestId = Math.min(
-            0,
-            ...savedPosts.map((post) => post.id)
-          );
-
-          nextId.current = lowestId - 1;
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load saved posts:", error);
-    } finally {
-      setPostsReady(true);
-    }
-  }, []);
-
-  // Save posts whenever they change
-  useEffect(() => {
-    if (!postsReady) return;
-
-    try {
-      localStorage.setItem(
-        "blog-posts",
-        JSON.stringify(newPosts)
-      );
-    } catch (error) {
-      console.error("Failed to save posts:", error);
-    }
-  }, [newPosts, postsReady]);
+  const nextId = useRef(
+    Math.min(0, ...newPosts.map((post) => post.id)) - 1
+  );
 
   const addPost = (post: Omit<Post, "id">): Post => {
     const newPost: Post = {
@@ -95,7 +107,19 @@ export function PostProvider({
 
     nextId.current -= 1;
 
-    setNewPosts((prev) => [newPost, ...prev]);
+    const updatedPosts = [newPost, ...newPosts];
+
+    // Save immediately to localStorage
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(updatedPosts)
+      );
+    } catch (error) {
+      console.error("Failed to save posts:", error);
+    }
+
+    setNewPosts(updatedPosts);
 
     return newPost;
   };
