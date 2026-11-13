@@ -1,11 +1,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePosts } from "@/context/postcontext";
-
 
 export default function CreatePost() {
   const router = useRouter();
@@ -21,9 +20,7 @@ export default function CreatePost() {
     submit: "",
   });
 
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (loading) return;
@@ -85,7 +82,7 @@ export default function CreatePost() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
+    <main className="min-h-screen bg-gray-100 p-4 sm:p-6">
       <div className="mx-auto max-w-2xl">
         <Link href="/" className="text-blue-600">
           ← Back to Home
@@ -99,6 +96,7 @@ export default function CreatePost() {
           onSubmit={handleSubmit}
           className="space-y-5 rounded-lg bg-white p-6 shadow"
         >
+          {/* Post Title */}
           <div>
             <label
               htmlFor="title"
@@ -123,6 +121,7 @@ export default function CreatePost() {
             )}
           </div>
 
+          {/* Post Body */}
           <div>
             <label
               htmlFor="body"
@@ -135,6 +134,17 @@ export default function CreatePost() {
               id="body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.nativeEvent.isComposing &&
+                  !loading
+                ) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
               placeholder="Write your blog content..."
               rows={6}
               className="w-full rounded-lg border p-3 text-gray-900"
@@ -147,16 +157,18 @@ export default function CreatePost() {
             )}
           </div>
 
+          {/* Submit Error */}
           {errors.submit && (
             <p className="text-red-600">
               {errors.submit}
             </p>
           )}
 
+          {/* Create Post Button */}
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-blue-600 px-6 py-3 text-white disabled:opacity-50"
+            className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Creating..." : "Create Post"}
           </button>

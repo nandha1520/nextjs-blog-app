@@ -84,40 +84,44 @@ function PostDetails() {
   }, [id, newPosts, postsReady]);
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
+    <main className="min-h-screen bg-gray-100 p-4 transition-colors duration-300 sm:p-6 dark:bg-gray-950">
       <div className="mx-auto max-w-3xl">
         <Link
           href="/"
-          className="mb-6 inline-block text-blue-600"
+          className="mb-6 inline-block text-blue-600 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to Home
         </Link>
 
+        {/* Loading */}
         {(loading || !postsReady) && (
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Loading post...
           </p>
         )}
 
+        {/* Error */}
         {error && (
-          <p className="text-red-600">
+          <p className="text-red-600 dark:text-red-400">
             {error}
           </p>
         )}
 
+        {/* Invalid Post */}
         {postsReady && !loading && !error && !post && (
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Post not found
           </h1>
         )}
 
+        {/* Post Content */}
         {post && (
-          <article className="rounded-lg bg-white p-6 shadow">
-            <h1 className="mb-4 text-3xl font-bold text-gray-900">
+          <article className="rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-md transition-all duration-300 sm:p-6 dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg">
+            <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
               {post.title}
             </h1>
 
-            <p className="whitespace-pre-line text-gray-700">
+            <p className="whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">
               {post.body}
             </p>
           </article>
@@ -127,11 +131,19 @@ function PostDetails() {
   );
 }
 
+// Suspense Wrapper
 export default function PostPage() {
   return (
-    <Suspense fallback={<p>Loading post...</p>}>
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-gray-100 p-6 dark:bg-gray-950">
+          <p className="text-gray-700 dark:text-gray-300">
+            Loading post...
+          </p>
+        </main>
+      }
+    >
       <PostDetails />
     </Suspense>
   );
 }
-

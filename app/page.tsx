@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, Mic, Camera } from "lucide-react";
 import { usePosts, type Post } from "@/context/postcontext";
 import Card from "@/components/card";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function Home() {
   const { newPosts, postsReady } = usePosts();
@@ -51,11 +52,10 @@ export default function Home() {
     normalizeText(post.title).includes(normalizeText(search))
   );
 
-  // Wait until saved posts are loaded
   if (!postsReady) {
     return (
-      <main className="min-h-screen bg-gray-100 p-6">
-        <p className="text-gray-700">
+      <main className="min-h-screen bg-gray-100 p-6 dark:bg-gray-950">
+        <p className="text-gray-700 dark:text-gray-300">
           Loading saved posts...
         </p>
       </main>
@@ -63,54 +63,55 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
+    <main className="min-h-screen bg-gray-100 p-4 transition-colors duration-300 sm:p-6 dark:bg-gray-950">
       <div className="mx-auto max-w-4xl">
 
         {/* Header */}
-        <div className="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             My Blog
           </h1>
 
-          <Link
-            href="/create"
-            className="w-full rounded-lg bg-blue-600 px-5 py-3 text-center text-white hover:bg-blue-700 sm:w-auto"
-          >
-            + Create New Post
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggle />
+
+            <Link
+              href="/create"
+              className="rounded-lg bg-blue-600 px-5 py-3 text-center text-white transition-colors hover:bg-blue-700"
+            >
+              + Create New Post
+            </Link>
+          </div>
         </div>
 
         {/* Google Style Search Bar */}
-        <div className="mb-6 flex items-center gap-3 rounded-full border border-gray-300 bg-white px-4 py-3 shadow-sm transition focus-within:border-blue-500 focus-within:shadow-md">
+        <div className="mb-6 flex items-center gap-3 rounded-full border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-300 focus-within:border-blue-500 focus-within:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:focus-within:border-blue-400">
 
-          {/* Left Search Icon */}
           <Search
             size={20}
-            className="shrink-0 text-gray-500"
+            className="shrink-0 text-gray-500 dark:text-gray-300"
             aria-hidden="true"
           />
 
-          {/* Search Input */}
           <input
             type="text"
             placeholder="Search blog posts..."
             aria-label="Search blog posts"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-gray-900 outline-none placeholder:text-gray-400"
+            className="min-w-0 flex-1 bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-400"
           />
 
-          {/* Right Side Icons */}
           <div className="flex shrink-0 items-center gap-3">
             <Mic
               size={20}
-              className="text-blue-600"
+              className="text-blue-600 dark:text-blue-400"
               aria-hidden="true"
             />
 
             <Camera
               size={20}
-              className="text-blue-600"
+              className="text-blue-600 dark:text-blue-400"
               aria-hidden="true"
             />
           </div>
@@ -118,21 +119,21 @@ export default function Home() {
 
         {/* Loading Message */}
         {loading && (
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Loading posts...
           </p>
         )}
 
         {/* Error Message */}
         {error && (
-          <p className="mb-4 text-red-600">
+          <p className="mb-4 text-red-600 dark:text-red-400">
             {error}
           </p>
         )}
 
         {/* No Search Results */}
         {!loading && !error && filteredPosts.length === 0 && (
-          <p className="text-center text-gray-600">
+          <p className="text-center text-gray-600 dark:text-gray-300">
             No posts found for &quot;{search}&quot;
           </p>
         )}
@@ -145,26 +146,27 @@ export default function Home() {
 
             return (
               <Card key={post.id}>
-                <h2 className="mb-2 text-xl font-semibold text-gray-900">
+                <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
                   {post.title}
                 </h2>
 
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   {description}
                   {words.length > 30 ? "..." : ""}
                 </p>
 
-                <Link
-                  href={`/post/${post.id}`}
-                  className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                >
-                  Read More
-                </Link>
+                <div className="mt-4 flex justify-end">
+                  <Link
+                    href={`/post/${post.id}`}
+                    className="inline-block rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+                  >
+                    Read More
+                  </Link>
+                </div>
               </Card>
             );
           })}
         </div>
-
       </div>
     </main>
   );
